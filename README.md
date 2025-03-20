@@ -21,12 +21,12 @@ To compile dependencies for proofs do (`make src/program_proof/session/versionVe
 13. getDataFromOperationLog
 14. acknowledgeGossip
 15. getGossipOperations
+16. receiveGossip
+17. processClientRequest
 
 ## Functions left to complete:
 ### Server
-1. processClientRequest (easy)
-2. processRequest (medium)
-3. receiveGossip (medium)
+1. processRequest
 ### Client
 1. write (easy)
 2. read (easy)

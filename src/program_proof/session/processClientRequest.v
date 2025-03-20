@@ -119,7 +119,7 @@ Section heap.
     { done. } { iFrame. } iIntros "%s' [H1_s' H2_s']". wp_pures. wp_store.
     wp_apply (wp_SliceSkip); eauto. { word. } wp_load. wp_apply (wp_SliceAppendSlice with "[H1_s' H3_s1]"). { done. }
     { simpl in *. iFrame. } iIntros "%s'' [H1_s'' H2_s'']". iApply "HΦ".
-    unfold message_slice, message_slice'. iExists (take (uint.nat index) ops1 ++ drop (uint.nat index + 1)%nat ops1). iSplitR "H_ops1".
+    unfold message_slice. iExists (take (uint.nat index) ops1 ++ drop (uint.nat index + 1)%nat ops1). iSplitR "H_ops1".
     - remember (uint.nat index) as k eqn: H_k in *.
       replace (uint.nat (w64_word_instance .(word.add) index (W64 1))) with (k + 1)%nat in * by word.
       rewrite take_take. replace (k `min` (k + 1))%nat with k by word. iFrame.
@@ -254,7 +254,7 @@ Section heap.
         apply nil_length_inv in H_l1_len. apply nil_length_inv in H_l2_len. subst l1_ops l2_ops.
         iPoseProof (big_sepL2_nil_inv_l with "[$H_l1_ops]") as "->".
         iPoseProof (big_sepL2_nil_inv_l with "[$H_l2_ops]") as "->".
-        wp_apply wp_NewSlice. iIntros "%s3 H_s3". replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with (@nil (Slice.t * w64)) by reflexivity.
+        wp_apply wp_NewSlice. iIntros "%s3 H_s3". replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with ( @nil (Slice.t * w64)) by reflexivity.
         iApply "HΦ". iExists []. iFrame. iSplitL. { done. } iSplitL "". { iApply big_sepL2_nil; eauto. } done.
       + wp_pures. rewrite -> bool_decide_eq_true in decide_s1. rewrite -> bool_decide_eq_false in decide_s2.
         assert (s1 .(Slice.sz) = W64 0) as s1_sz_eq_0 by congruence.
@@ -263,7 +263,7 @@ Section heap.
         replace (uint.nat (W64 0)) with 0%nat in H_l1_len by reflexivity.
         apply nil_length_inv in H_l1_len. subst l1_ops.
         iPoseProof (big_sepL2_nil_inv_l with "[$H_l1_ops]") as "->". iPoseProof (big_sepL2_length with "[$H_l2_ops]") as "%H_l2_length". iPoseProof (own_slice_sz with "[$H_s2]") as "%H_s2_sz". simpl in *.
-        wp_apply wp_NewSlice. iIntros "%s3 H_s3". replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with (@nil (Slice.t * w64)) by reflexivity.
+        wp_apply wp_NewSlice. iIntros "%s3 H_s3". replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with ( @nil (Slice.t * w64)) by reflexivity.
         iDestruct "H_s1" as "[H1_s1 H2_s1]". wp_apply (wp_SliceAppendSlice with "[$H_s3 $H1_s1]"); auto. simpl. iIntros "%s4 [H_s4 H1_s1]".
         wp_apply wp_ref_to; auto. iIntros "%intermediate H_intermediate". wp_pures. wp_apply wp_ref_to; auto.
         wp_pures. iIntros "%i H_i". wp_pures. wp_apply wp_slice_len. wp_apply wp_ref_to; auto. iIntros "%l H_l". wp_pures.
@@ -518,7 +518,7 @@ Section heap.
                   replace (index - length (take index (fold_left coq_sortedInsert l2 [])))%nat with 0%nat in H_peek_l'; cycle 1. { rewrite length_take. word. }
                   destruct (drop index (fold_left coq_sortedInsert l2 [])) as [ | hd tl] eqn: H_OBS.
                   + rewrite lookup_nil in H_peek_l'. congruence.
-                  + simpl in *. replace (take 0 tl) with (@nil Operation.t) by reflexivity. congruence.
+                  + simpl in *. replace (take 0 tl) with ( @nil Operation.t) by reflexivity. congruence.
                 - rewrite LOOK. rewrite fold_left_app. simpl. iPureIntro.
                   unfold loop_step at 1. rewrite <- H_loop. 
                   rewrite H_peek_r. rewrite Heqb. reflexivity.
@@ -617,7 +617,7 @@ Section heap.
                   replace (index - length (take index (fold_left coq_sortedInsert l2 [])))%nat with 0%nat in H_peek_l'; cycle 1. { rewrite length_take. word. }
                   destruct (drop index (fold_left coq_sortedInsert l2 [])) as [ | hd tl] eqn: H_OBS.
                   + rewrite lookup_nil in H_peek_l'. congruence.
-                  + simpl in *. replace (take 0 tl) with (@nil Operation.t) by reflexivity. congruence.
+                  + simpl in *. replace (take 0 tl) with ( @nil Operation.t) by reflexivity. congruence.
                 - rewrite LOOK. rewrite fold_left_app. simpl. iPureIntro.
                   unfold loop_step at 1. rewrite <- H_loop. 
                   rewrite H_peek_r. rewrite Heqb. reflexivity.
@@ -747,12 +747,12 @@ Section heap.
               + iExact "H_l2_ops_pers".
               + iPureIntro. unfold coq_mergeOperations. replace (fun acc => fun element => coq_sortedInsert acc element) with coq_sortedInsert by reflexivity.
                 rewrite <- H_l3. fold loop_step. fold loop_init. rewrite claim4. rewrite fold_left_app. simpl. rewrite <- H2. simpl.
-                simpl. replace (l3 !! (index + 1)%nat) with (@None (Operation.t)); trivial.
+                simpl. replace (l3 !! (index + 1)%nat) with ( @None (Operation.t)); trivial.
                 symmetry. eapply lookup_ge_None. word.
           }
           unfold coq_mergeOperations. replace (fun acc => fun element => coq_sortedInsert acc element) with coq_sortedInsert by reflexivity.
           rewrite <- H_l3. fold loop_step. fold loop_init. rewrite claim4. rewrite fold_left_app. simpl. rewrite <- H2. simpl.
-          simpl. replace (l3 !! (index + 1)%nat) with (@None (Operation.t)); cycle 1. { symmetry. eapply lookup_ge_None. word. }
+          simpl. replace (l3 !! (index + 1)%nat) with ( @None (Operation.t)); cycle 1. { symmetry. eapply lookup_ge_None. word. }
           simpl. iExists (take (length acc + 1) l3_ops). iSplitL "H_s3".
           - replace (take (length acc + 1) l3_ops) with (take (uint.nat (W64 (length acc + 1)%nat)) l3_ops) by now f_equal; word.
             iDestruct "H_s3" as "[H1_s3 H2_s3]". iPoseProof (slice_small_split with "[$H1_s3]") as "[H1 H2]". { instantiate (1 := W64 (length acc + 1)%nat). word. }
@@ -766,7 +766,7 @@ Section heap.
         }
     - rewrite bool_decide_eq_false in decide_s1. assert (s1 .(Slice.sz) ≠ (W64 0)) as H_NE_NIL by congruence. clear decide_s1. iPoseProof (big_sepL2_length with "[$H_l1_ops]") as "%H2_NE_NIL".
       iPoseProof (big_sepL2_length with "[$H_l2_ops]") as "%H_l2_length". iPoseProof (own_slice_sz with "[$H_s2]") as "%H_s2_sz". simpl in *.
-      wp_apply wp_NewSlice. iIntros "%s3 H_s3". replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with (@nil (Slice.t * w64)) by reflexivity.
+      wp_apply wp_NewSlice. iIntros "%s3 H_s3". replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with ( @nil (Slice.t * w64)) by reflexivity.
       iDestruct "H_s1" as "[H1_s1 H2_s1]". wp_apply (wp_SliceAppendSlice with "[$H_s3 $H1_s1]"); auto. simpl. iIntros "%s4 [H_s4 H1_s1]".
       wp_pures. wp_apply wp_ref_to; auto. iIntros "%intermediate H_intermediate". wp_pures. wp_apply wp_ref_to; auto.
       wp_pures. iIntros "%i H_i". wp_pures. wp_apply wp_slice_len. wp_apply wp_ref_to; auto. iIntros "%l H_l". wp_pures.
@@ -1021,7 +1021,7 @@ Section heap.
                 replace (index - length (take index (fold_left coq_sortedInsert l2 l1)))%nat with 0%nat in H_peek_l'; cycle 1. { rewrite length_take. word. }
                 destruct (drop index (fold_left coq_sortedInsert l2 l1)) as [ | hd tl] eqn: H_OBS.
                 + rewrite lookup_nil in H_peek_l'. congruence.
-                + simpl in *. replace (take 0 tl) with (@nil Operation.t) by reflexivity. congruence.
+                + simpl in *. replace (take 0 tl) with ( @nil Operation.t) by reflexivity. congruence.
               - rewrite LOOK. rewrite fold_left_app. simpl. iPureIntro.
                 unfold loop_step at 1. rewrite <- H_loop. 
                 rewrite H_peek_r. rewrite Heqb. reflexivity.
@@ -1120,7 +1120,7 @@ Section heap.
                 replace (index - length (take index (fold_left coq_sortedInsert l2 l1)))%nat with 0%nat in H_peek_l'; cycle 1. { rewrite length_take. word. }
                 destruct (drop index (fold_left coq_sortedInsert l2 l1)) as [ | hd tl] eqn: H_OBS.
                 + rewrite lookup_nil in H_peek_l'. congruence.
-                + simpl in *. replace (take 0 tl) with (@nil Operation.t) by reflexivity. congruence.
+                + simpl in *. replace (take 0 tl) with ( @nil Operation.t) by reflexivity. congruence.
               - rewrite LOOK. rewrite fold_left_app. simpl. iPureIntro.
                 unfold loop_step at 1. rewrite <- H_loop. 
                 rewrite H_peek_r. rewrite Heqb. reflexivity.
@@ -1252,12 +1252,12 @@ Section heap.
               * iExact "H_l2_ops_pers".
               * iPureIntro. unfold coq_mergeOperations. replace (fun acc => fun element => coq_sortedInsert acc element) with coq_sortedInsert by reflexivity.
                 rewrite <- H_l3. fold loop_step. fold loop_init. rewrite claim4. rewrite fold_left_app. simpl. rewrite <- H2. simpl.
-                simpl. replace (l3 !! (index + 1)%nat) with (@None (Operation.t)); trivial.
+                simpl. replace (l3 !! (index + 1)%nat) with ( @None (Operation.t)); trivial.
                 symmetry. eapply lookup_ge_None. word.
         }
         unfold coq_mergeOperations. replace (fun acc => fun element => coq_sortedInsert acc element) with coq_sortedInsert by reflexivity.
         rewrite <- H_l3. fold loop_step. fold loop_init. rewrite claim4. rewrite fold_left_app. simpl. rewrite <- H2. simpl.
-        simpl. replace (l3 !! (index + 1)%nat) with (@None (Operation.t)); cycle 1. { symmetry. eapply lookup_ge_None. word. }
+        simpl. replace (l3 !! (index + 1)%nat) with ( @None (Operation.t)); cycle 1. { symmetry. eapply lookup_ge_None. word. }
         simpl. iExists (take (length acc + 1) l3_ops). iSplitL "H_s3".
         - replace (take (length acc + 1) l3_ops) with (take (uint.nat (W64 (length acc + 1)%nat)) l3_ops) by now f_equal; word.
           iDestruct "H_s3" as "[H1_s3 H2_s3]". iPoseProof (slice_small_split with "[$H1_s3]") as "[H1 H2]". { instantiate (1 := W64 (length acc + 1)%nat). word. }

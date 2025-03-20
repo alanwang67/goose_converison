@@ -5,18 +5,18 @@ Section heap.
 
   Context `{hG: !heapGS Σ}.
 
-  Lemma wp_receiveGossip (sv:tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) (s: Server.t)
-    (msgv:tuple_of[u64,u64,u64,u64,u64,Slice.t,u64,u64,Slice.t,u64,u64,u64,u64,u64,u64,Slice.t,u64,u64]) (msg: Message.t)
+  Lemma wp_receiveGossip (sv: tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) (s: Server.t)
+    (msgv: tuple_of[u64,u64,u64,u64,u64,Slice.t,u64,u64,Slice.t,u64,u64,u64,u64,u64,u64,Slice.t,u64,u64]) (msg: Message.t)
     (n: nat) c2s s2c len_mo len_ga :
     {{{
-        is_server sv s n n n len_mo n len_ga ∗ 
+        is_server sv s n n n len_mo n len_ga true ∗ 
         is_message msgv msg n c2s s2c ∗
         ⌜is_sorted s .(Server.PendingOperations) /\ is_sorted s .(Server.OperationsPerformed)⌝
     }}}
       receiveGossip (server_val sv) (message_val msgv)
     {{{
         r, RET server_val r;
-        is_server r (coq_receiveGossip s msg) n n n len_mo n len_ga ∗
+        is_server r (coq_receiveGossip s msg) n n n len_mo n len_ga true ∗
         is_message msgv msg n c2s s2c ∗
         ⌜is_sorted (coq_receiveGossip s msg) .(Server.PendingOperations) /\ is_sorted (coq_receiveGossip s msg) .(Server.OperationsPerformed)⌝
     }}}.
@@ -36,7 +36,7 @@ Section heap.
         iPoseProof (own_slice_sz with "[$H1_20]") as "%YES1".
         iPoseProof (big_sepL2_length with "[$H2_20]") as "%YES2".
         word.
-    - replace ((#s .(Server.Id), (#s .(Server.NumberOfServers), (t4, (t3, (t2, (t1, (t0, (t, #())))))))))%V with (@SessionPrelude.value_of (tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) _ (s .(Server.Id), s .(Server.NumberOfServers), t4, t3, t2, t1, t0, t)) by reflexivity. rewrite <- redefine_server_val. simplNotation.
+    - replace ((#s .(Server.Id), (#s .(Server.NumberOfServers), (t4, (t3, (t2, (t1, (t0, (t, #())))))))))%V with ( @SessionPrelude.value_of (tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) _ (s .(Server.Id), s .(Server.NumberOfServers), t4, t3, t2, t1, t0, t)) by reflexivity. rewrite <- redefine_server_val. simplNotation.
       wp_apply wp_ref_to. { repeat econstructor; eauto. } rewrite redefine_server_val. simplNotation. iIntros "%server H_server".
       wp_pures. wp_load. wp_apply (wp_mergeOperations with "[$H8 $H20]"); auto. iIntros "%ns (%nxs & H31 & -> & H8 & H20 & %H2_sorted')".
       wp_apply (wp_storeField_struct with "[H_server]"). { repeat constructor; auto. } { iExact "H_server". }
@@ -134,7 +134,7 @@ Section heap.
             iPureIntro.
             { unfold coq_deleteAtIndexOperation. split.
               - rewrite length_app length_take length_drop. word.
-              - rewrite drop_app. replace (drop index (take index s .(Server.PendingOperations))) with (@nil Operation.t); cycle 1.
+              - rewrite drop_app. replace (drop index (take index s .(Server.PendingOperations))) with ( @nil Operation.t); cycle 1.
                 { symmetry. eapply nil_length_inv. rewrite length_drop length_take. word. }
                 simpl. rewrite length_take.
                 assert (index < length s .(Server.PendingOperations))%nat as YES4.
@@ -154,9 +154,9 @@ Section heap.
                 { replace is_sorted with (SessionPrelude.isSorted (hsOrd := hsOrd_Operation n)) by reflexivity. eapply SessionPrelude.isSorted_middle_1 with (y := cur).
                   replace SessionPrelude.isSorted with is_sorted by reflexivity. simpl. replace (drop 0 nexts) with nexts by reflexivity. rewrite take_app.
                   rewrite take_take. replace (index `min` index)%nat with index by word. rewrite length_take. replace (index - index `min` length s .(Server.PendingOperations))%nat with 0%nat by word.
-                  replace (take 0 nexts) with (@nil Operation.t) by reflexivity. rewrite app_nil_r. done.
+                  replace (take 0 nexts) with ( @nil Operation.t) by reflexivity. rewrite app_nil_r. done.
                 }
-                replace (take (index - length (take index s .(Server.PendingOperations))) (drop 1 (cur :: nexts))) with (@nil Operation.t); cycle 1.
+                replace (take (index - length (take index s .(Server.PendingOperations))) (drop 1 (cur :: nexts))) with ( @nil Operation.t); cycle 1.
                 { symmetry. eapply nil_length_inv. rewrite length_take. simpl. rewrite length_drop. rewrite length_take. word. }
                 enough (length (coq_maxTS s .(Server.VectorClock) cur .(Operation.VersionVector)) = length s0 .(Server.VectorClock)) by done.
                 rewrite <- H1_invariant. revert H1_op2. subst n. rewrite <- H1_invariant. clear. generalize (s .(Server.VectorClock)) as xs. generalize (cur .(Operation.VersionVector)) as ys.
@@ -177,12 +177,12 @@ Section heap.
               - rewrite <- app_assoc. simpl. trivial.
               - rewrite <- take_drop with (l := s .(Server.PendingOperations)) (i := index).
                 rewrite take_app. rewrite take_take. replace (index `min` index)%nat with index by word.
-                replace (take (index - length (take index s .(Server.PendingOperations))) (drop index s .(Server.PendingOperations))) with (@nil Operation.t); cycle 1.
+                replace (take (index - length (take index s .(Server.PendingOperations))) (drop index s .(Server.PendingOperations))) with ( @nil Operation.t); cycle 1.
                 { symmetry. eapply nil_length_inv. rewrite length_take. rewrite length_take. rewrite length_drop. word. }
                 rewrite H_nexts. rewrite app_nil_r. f_equal.
                 replace (take index s .(Server.PendingOperations) ++ cur :: nexts) with ((take index s .(Server.PendingOperations) ++ [cur]) ++ nexts); cycle 1.
                 { rewrite <- app_assoc. reflexivity. }
-                rewrite take_app. replace (take (index + 1 - length (take index s .(Server.PendingOperations) ++ [cur])) nexts) with (@nil Operation.t); cycle 1.
+                rewrite take_app. replace (take (index + 1 - length (take index s .(Server.PendingOperations) ++ [cur])) nexts) with ( @nil Operation.t); cycle 1.
                 { symmetry. eapply nil_length_inv. rewrite length_take. rewrite length_app. simpl.  rewrite length_take. word. }
                 rewrite app_nil_r. rewrite take_app. rewrite take_take. replace ((index + 1) `min` index)%nat with index by word.
                 rewrite length_take. replace (index + 1 - index `min` length s .(Server.PendingOperations))%nat with 1%nat by word. reflexivity.
@@ -230,17 +230,17 @@ Section heap.
       }
   Qed.
 
-  Lemma wp_acknowledgeGossip (sv:tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) (s: Server.t)
-    (msgv:tuple_of[u64,u64,u64,u64,u64,Slice.t,u64,u64,Slice.t,u64,u64,u64,u64,u64,u64,Slice.t,u64,u64]) (msg: Message.t)
-    (n: nat) c2s s2c len_vc len_op len_mo len_po len_ga :
+  Lemma wp_acknowledgeGossip (sv: tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) (s: Server.t)
+    (msgv: tuple_of[u64,u64,u64,u64,u64,Slice.t,u64,u64,Slice.t,u64,u64,u64,u64,u64,u64,Slice.t,u64,u64]) (msg: Message.t)
+    (n: nat) c2s s2c len_vc len_op len_mo len_po len_ga OWN_UnsatisfiedRequests :
     {{{
-        is_server sv s n len_vc len_op len_mo len_po len_ga ∗ 
+        is_server sv s n len_vc len_op len_mo len_po len_ga OWN_UnsatisfiedRequests ∗ 
         is_message msgv msg n c2s s2c
     }}}
       acknowledgeGossip (server_val sv) (message_val msgv)
     {{{
         r, RET r;
-        is_server sv (coq_acknowledgeGossip s msg) n len_vc len_op len_mo len_po len_ga ∗
+        is_server sv (coq_acknowledgeGossip s msg) n len_vc len_op len_mo len_po len_ga OWN_UnsatisfiedRequests ∗
         is_message msgv msg n c2s s2c
     }}}.
   Proof.
@@ -281,16 +281,16 @@ Section heap.
       + iPureIntro. done.
   Qed.
 
-  Lemma wp_getGossipOperations (sv:tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) (s: Server.t)
-    (serverId: w64) (n: nat) len_vc len_op len_mo len_po len_ga :
+  Lemma wp_getGossipOperations (sv: tuple_of[u64,u64,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t,Slice.t]) (s: Server.t)
+    (serverId: w64) (n: nat) len_vc len_op len_mo len_po len_ga OWN_UnsatisfiedRequests :
     {{{
-        is_server sv s n len_vc len_op len_mo len_po len_ga
+        is_server sv s n len_vc len_op len_mo len_po len_ga OWN_UnsatisfiedRequests
     }}}
       getGossipOperations (server_val sv) #serverId
     {{{
         ns , RET slice_val (ns);
         operation_slice ns (coq_getGossipOperations s serverId) len_mo ∗
-        is_server sv s n len_vc len_op len_mo len_po len_ga
+        is_server sv s n len_vc len_op len_mo len_po len_ga OWN_UnsatisfiedRequests
     }}}.
   Proof.
     TypeVector.des sv.
@@ -305,8 +305,8 @@ Section heap.
     wp_pures. wp_bind (if: #serverId ≥ slice.len t then #true else _)%E.
     wp_apply wp_slice_len; auto. wp_if_destruct.
     - wp_pures. wp_load. iModIntro. iApply "HΦ". iFrame.
-      replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with (@nil (Slice.t * w64)) in *; simpl in *; trivial. iSplitL "".
-      + unfold coq_getGossipOperations. replace (s .(Server.GossipAcknowledgements) !! uint.nat serverId) with (@None u64).
+      replace (replicate (uint.nat (W64 0)) operation_into_val .(IntoVal_def (Slice.t * w64))) with ( @nil (Slice.t * w64)) in *; simpl in *; trivial. iSplitL "".
+      + unfold coq_getGossipOperations. replace (s .(Server.GossipAcknowledgements) !! uint.nat serverId) with ( @None u64).
         * iApply big_sepL2_nil. done.
         * symmetry. eapply lookup_ge_None. word.
       + iPureIntro. tauto.
@@ -318,7 +318,7 @@ Section heap.
       + wp_load. iModIntro. iApply "HΦ". iDestruct "H7" as "[%ops [H7 H9]]". unfold tuple_of in *. simpl in *.
         iPoseProof (own_slice_sz with "[$H7]") as "%YES3".
         iPoseProof (big_sepL2_length with "[$H9]") as "%YES4".
-        iFrame. simpl in *. replace (replicate (uint.nat (W64 0)) (Slice.nil, W64 0)) with (@nil (Slice.t * w64)) in *; simpl in *; trivial. iSplitL "".
+        iFrame. simpl in *. replace (replicate (uint.nat (W64 0)) (Slice.nil, W64 0)) with ( @nil (Slice.t * w64)) in *; simpl in *; trivial. iSplitL "".
         * unfold coq_getGossipOperations. rewrite H_v. rewrite skipn_all2.
           { simpl. done. }
           { word. }
@@ -331,7 +331,7 @@ Section heap.
         iPoseProof (slice_small_split with "[$H7]") as "[H7 H7']".
         { instantiate (1 := v). word. }
         wp_apply (wp_SliceAppendSlice with "[$H1_s1 $H2_s1 H7']"); auto.
-        iIntros "%s2 [H1_s2 H2_s2]". replace (replicate (uint.nat (W64 0)) (Slice.nil, W64 0)) with (@nil (Slice.t * w64)) in * by reflexivity. simpl in *.
+        iIntros "%s2 [H1_s2 H2_s2]". replace (replicate (uint.nat (W64 0)) (Slice.nil, W64 0)) with ( @nil (Slice.t * w64)) in * by reflexivity. simpl in *.
         iApply "HΦ". iPoseProof (pers_big_sepL2_is_operation with "[$H11]") as "#H10_pers". iFrame.
         iSplitL "".
         { unfold coq_getGossipOperations. rewrite H_v. rewrite <- take_drop with (l := ops) (i := uint.nat v) at 1. rewrite <- take_drop with (l := s.(Server.MyOperations)) (i := uint.nat v) at 1.

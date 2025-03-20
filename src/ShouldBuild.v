@@ -126,3 +126,4 @@ From Perennial.program_proof.session Require versionVector.
 From Perennial.program_proof.session Require processClientRequest.
 From Perennial.program_proof.session Require processRequest.
 From Perennial.program_proof.session Require gossip.
+From Perennial.program_proof.session Require coq_session_client.

@@ -5,14 +5,6 @@ From Perennial.program_proof.session Require Export versionVector.
 Section heap.
   Context `{hG: !heapGS Σ}.
 
-  Definition is_sorted (l: list Operation.t) :=
-    ∀ (i j: nat), (i < j)%nat ->
-                  ∀ (o1 o2: Operation.t), l !! i = Some o1 ->
-                                          l !! j = Some o2 ->
-                                          coq_lexicographicCompare
-                                            (o2.(Operation.VersionVector)) (o1.(Operation.VersionVector)) = true \/
-                                                                                                              coq_equalSlices (o2.(Operation.VersionVector)) (o1.(Operation.VersionVector)) = true.
-  
   Lemma implies_Sorted :
     forall (l: list Operation.t) (element: Operation.t) (i: u64),
     is_sorted l ->
@@ -726,6 +718,35 @@ Section heap.
                 ** intros. eapply H6.
                    { assert (uint.nat w <= j') by word. eassumption. }
                    { auto. }
+  Qed.
+
+  Lemma another_wp_sortedInsert s l o v n :
+    {{{
+        operation_slice s l n ∗
+        is_operation o v n ∗
+        ⌜is_sorted l⌝ 
+    }}}
+      sortedInsert (slice_val s) (operation_val o)
+    {{{
+        ns, RET (slice_val ns);
+        operation_slice ns (coq_sortedInsert l v) n ∗
+        ⌜is_sorted (coq_sortedInsert l v)⌝
+    }}}.
+  Proof.
+    pose proof @SessionPrelude.Forall_True as claim1.
+    iIntros "%Φ (H_s & H_o & %H_sorted) HΦ".
+    iDestruct "H_s" as "(%ops & H_s & H_ops)".
+    iPoseProof (pers_big_sepL2_is_operation with "[$H_ops]") as "#H_ops_pers".
+    iDestruct "H_o" as "(%H1_o & %H2_o & H3_o)".
+    wp_apply (wp_sortedInsert with "[$H_s $H_ops $H3_o]"); auto.
+    iIntros "%ns (%nxs & H_ns & ->)".
+    iApply "HΦ".
+    iFrame.
+    iPoseProof (Forall_Operation_wf with "[$H_ops_pers]") as "%claim2".
+    iPureIntro.
+    change (is_sorted (coq_sortedInsert l v)) with (SessionPrelude.isSorted (hsOrd := hsOrd_Operation n) (SessionPrelude.sortedInsert (hsOrd := hsOrd_Operation n) l v)).
+    eapply SessionPrelude.sortedInsert_isSorted; eauto.
+    split; eauto.
   Qed.
 
 End heap.
